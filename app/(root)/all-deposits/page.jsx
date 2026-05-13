@@ -11,6 +11,7 @@ export default function DepositListPage() {
   const [copiedId, setCopiedId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedDeposit, setSelectedDeposit] = useState(null);
+  const [deleteId, setDeleteId] = useState(null);
   const [formData, setFormData] = useState({
     amount: "",
     trxId: "",
@@ -21,10 +22,10 @@ export default function DepositListPage() {
   const fetchDeposits = async () => {
     try {
       const { data } = await axios.get(`/api/diposit`);
-      if (data.success) {
-        setDeposits(data.data);
+      if (data?.success) {
+        setDeposits(data?.data);
       } else {
-        showToast("error", data.message || "Failed to load deposits");
+        showToast("error", data?.message || "Failed to load deposits");
       }
     } catch {
       showToast("error", "Failed to fetch deposits");
@@ -64,23 +65,23 @@ export default function DepositListPage() {
     try {
       setLoading(true);
       const res = await axios.post(`/api/diposit/receive`, {
-        transactionId: formData.trxId,
-        amount: Number(formData.amount),
-        senderNumber: formData.phone,
+        transactionId: formData?.trxId,
+        amount: Number(formData?.amount),
+        senderNumber: formData?.phone,
         service: selectedDeposit?.method, // send payment method
       });
 
-      if (res.data.success) {
+      if (res.data?.success) {
         showToast(
           "success",
-          res.data.message || "Deposit received successfully",
+          res.data?.message || "Deposit received successfully",
         );
         setDeposits((prev) =>
           prev.filter((d) => d._id !== selectedDeposit._id),
         );
         setShowModal(false);
       } else {
-        showToast("error", res.data.message || "Failed to receive deposit");
+        showToast("error", res.data?.message || "Failed to receive deposit");
       }
     } catch {
       showToast("error", "Failed to send request");
@@ -89,6 +90,30 @@ export default function DepositListPage() {
     }
   };
 
+  const deleteDeposit = async (id) => {
+    try {
+      setLoading(true);
+      const res = await axios.post(`/api/wallets/deleteRecord`, {
+        deleteId: id,
+        type: "deposit",
+      });
+
+      if (res?.data?.success) {
+        showToast(
+          "success",
+          res?.data?.message || "Deposit Deleted successfully",
+        );
+        setDeposits((prev) => prev.filter((d) => d._id !== id));
+        setDeleteId(null);
+      } else {
+        showToast("error", res?.data?.message || "Failed to Delete deposit");
+      }
+    } catch {
+      showToast("error", "Failed to send request");
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6">
       <h1 className="text-xl font-bold text-center mb-6">
@@ -96,50 +121,68 @@ export default function DepositListPage() {
       </h1>
 
       {deposits.length === 0 ? (
-        <p className="text-gray-400 text-center">No pending deposits found.</p>
+        <p className="text-gray-400 text-center mt-10">
+          No pending deposits found.
+        </p>
       ) : (
-        <div className="space-y-4">
+        <div className="grid gap-4">
           {deposits.map((deposit) => (
             <div
               key={deposit._id}
-              className="bg-[#5d5656] border border-gray-800 p-4 rounded-lg flex items-center justify-between"
+              className="group bg-gradient-to-br from-[#535353] to-[#362c2c] border border-gray-800 hover:border-blue-500  p-5 rounded-2xl shadow-lg "
             >
-              <div className="space-y-1">
-                <p>
-                  <span className="text-gray-400">Method:</span>{" "}
-                  {deposit.method}
+              {/* Left Content */}
+              <div className="space-y-2 w-full">
+                <div className="flex items-center justify-between">
+                  <p className="text-lg font-semibold text-white">
+                    💳 {deposit.method}
+                  </p>
+                  <span className="text-xs px-2 py-1 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+                    Pending
+                  </span>
+                </div>
+
+                <p className="text-sm text-gray-300">
+                  <span className="text-gray-500">Phone:</span> {deposit.phone}
                 </p>
-                <p>
-                  <span className="text-gray-400">Phone:</span> {deposit.phone}
-                </p>
-                <p className="flex items-center space-x-2">
-                  <span className="text-gray-400">TrxID:</span>
-                  <span>{deposit.trxId}</span>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-gray-500 text-sm">TrxID:</span>
+                  <span className="text-gray-200 font-mono truncate max-w-[180px]">
+                    {deposit.trxId}
+                  </span>
+
                   <button
                     onClick={() => handleCopy(deposit.trxId, deposit._id)}
-                    className="ml-2 bg-gray-700 hover:bg-blue-500 px-2 py-1 rounded text-sm"
+                    className="text-xs px-3 py-1 rounded-md bg-gray-800 transition"
                   >
-                    {copiedId === deposit._id ? "Copied!" : "Copy"}
+                    {copiedId === deposit._id ? "✓ Copied" : "Copy"}
                   </button>
-                </p>
-                <p>
-                  <span className="text-gray-400">Time:</span>{" "}
+                </div>
+
+                <p className="text-md text-gray-400">
                   {new Date(deposit.createdAt).toLocaleString("en-US", {
                     year: "numeric",
-                    month: "long",
+                    month: "short",
                     day: "numeric",
                     hour: "2-digit",
                     minute: "2-digit",
-                    second: "2-digit",
-                    hour12: false,
                   })}
                 </p>
               </div>
 
-              <div className="mt-4 sm:mt-0">
+              {/* Actions */}
+              <div className="flex justify-around gap-4  mt-2">
+                <button
+                  onClick={() => setDeleteId(deposit._id)}
+                  className="px-6 py-2 rounded-xl text-sm font-medium  bg-red-400 border border-red-500/3 text-white transition"
+                >
+                  Delete
+                </button>
+
                 <button
                   onClick={() => openModal(deposit)}
-                  className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-medium"
+                  className="px-6 py-2 rounded-xl text-sm font-medium border border-blue-500/30 bg-blue-500 text-white transition"
                 >
                   Approve
                 </button>
@@ -166,7 +209,7 @@ export default function DepositListPage() {
                 <input
                   type="number"
                   name="amount"
-                  value={formData.amount}
+                  value={formData?.amount}
                   onChange={handleChange}
                   className="w-full px-3 py-2 bg-gray-900 rounded border border-gray-700 focus:outline-none focus:border-blue-500"
                   required
@@ -181,7 +224,7 @@ export default function DepositListPage() {
                 <input
                   type="text"
                   name="trxId"
-                  value={formData.trxId}
+                  value={formData?.trxId}
                   readOnly
                   className="w-full px-3 py-2 bg-gray-900 rounded border border-gray-700 text-gray-400 cursor-not-allowed"
                 />
@@ -195,7 +238,7 @@ export default function DepositListPage() {
                 <input
                   type="text"
                   name="phone"
-                  value={formData.phone}
+                  value={formData?.phone}
                   readOnly
                   className="w-full px-3 py-2 bg-gray-900 rounded border border-gray-700 text-gray-400 cursor-not-allowed"
                 />
@@ -217,6 +260,35 @@ export default function DepositListPage() {
                 />
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* delete deposit */}
+      {deleteId && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md relative">
+            <h2 className="text-lg font-semibold mb-4 text-center">
+              Delete This Deposit
+            </h2>
+
+            {/* Buttons */}
+            <div className="flex justify-around gap-4 mt-6">
+              <button
+                type="button"
+                onClick={() => setDeleteId(null)}
+                className="px-6  py-2 bg-gray-600 rounded"
+              >
+                Cancel
+              </button>
+              <ButtonLoading
+                onclick={async () => {
+                  (await deleteDeposit(deleteId), setDeleteId(null));
+                }}
+                loading={loading}
+                text="Delete"
+                className="bg-red-600  px-6 py-2 rounded "
+              />
+            </div>
           </div>
         </div>
       )}

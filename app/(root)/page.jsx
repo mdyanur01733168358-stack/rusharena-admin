@@ -3,8 +3,6 @@ import FullScreenMobileMenu from "@/app/component/menu";
 import Image from "next/image";
 import React from "react";
 import MatchCards from "../component/application/match-card";
-import { PushNotifications } from "@capacitor/push-notifications";
-import { useEffect } from "react";
 
 const Dashboard = () => {
   return (

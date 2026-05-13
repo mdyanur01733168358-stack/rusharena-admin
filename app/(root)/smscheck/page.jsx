@@ -64,7 +64,7 @@ export default function XGSPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          key: " You have received Tk 800.00 from 01986414272. Fee Tk 0.00. Balance Tk 5,378.07. TrxID DEK25RJG78 at 12/05/2026 23:58",
+          key: " You have received Tk 100.00 from 01986414272. Fee Tk 0.00. Balance Tk 5,378.07. TrxID DE71W4U71R at 12/05/2026 23:58",
         }),
       });
 

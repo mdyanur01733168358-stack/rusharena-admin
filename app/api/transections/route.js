@@ -16,7 +16,7 @@ export async function GET(req) {
 
     // ✅ last 2 days
     const startOftwoDay = new Date();
-    startOftwoDay.setDate(startOftwoDay.getDate() - 2);
+    startOftwoDay.setDate(startOftwoDay.getDate() - 1);
     startOftwoDay.setHours(0, 0, 0, 0);
 
     // ✅ start of week
@@ -90,19 +90,27 @@ export async function GET(req) {
       },
     ]);
 
-    const totalDipositsToday = transactions.reduce((total, tx) => {
-      if (tx.type === "deposit") {
-        return total + tx.amount;
-      }
-      return total;
-    }, 0);
+    const totalDipositsToday = Number(
+      transactions
+        .reduce((total, tx) => {
+          if (tx.type === "deposit") {
+            return total + Number(tx.amount || 0);
+          }
+          return total;
+        }, 0)
+        .toFixed(2),
+    );
 
-    const totalWithdrawToday = transactions.reduce((total, tx) => {
-      if (tx.type === "withdraw") {
-        return total + tx.amount;
-      }
-      return total;
-    }, 0);
+    const totalWithdrawToday = Number(
+      transactions
+        .reduce((total, tx) => {
+          if (tx.type === "withdraw") {
+            return total + Number(tx.amount || 0);
+          }
+          return total;
+        }, 0)
+        .toFixed(2),
+    );
 
     return NextResponse.json({
       success: true,

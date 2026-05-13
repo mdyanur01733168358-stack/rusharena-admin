@@ -35,9 +35,6 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 
-// clowdinary link ----------------------------
-import { clowdinaryLink } from "@/config";
-
 // ✅ Menu Data
 const menuData = [
   { label: "Control User", link: control_user, icon: FilePlus },
@@ -143,7 +140,7 @@ export default function FullScreenMobileMenu() {
   }, [pendingLink, router]);
 
   return (
-    <div className="w-full bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-y-auto py-6">
+    <div className="w-full bg-white dark:bg-gray-900 mt-[-50px] text-gray-800 dark:text-gray-200 overflow-y-auto py-6">
       {/* Header */}
       <div className="mb-6 bg-gray-800 p-4 rounded flex justify-between items-center">
         <h1 className="text-2xl font-bold text-yellow-600 underline">

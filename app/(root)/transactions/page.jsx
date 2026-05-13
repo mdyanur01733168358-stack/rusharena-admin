@@ -90,7 +90,7 @@ export default function DepositListPage() {
               Filter Transactions
             </h2>
             <p className="text-sm text-gray-400">
-              Select transaction Date to view
+              Select transaction Date to Filter
             </p>
           </div>
 

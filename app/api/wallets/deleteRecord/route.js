@@ -26,7 +26,7 @@ export async function POST(req) {
     let existingRecord;
 
     if (type === "deposit") {
-      existingRecord = await Deposits.findById(deleteId);
+      existingRecord = await Diposits.findById(deleteId);
     } else if (type === "withdraw") {
       existingRecord = await withdrawSchema.findById(deleteId);
     }

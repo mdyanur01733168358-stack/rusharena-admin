@@ -110,7 +110,8 @@ export default function WithdrawListPage() {
           {withdraws.map((w) => (
             <div
               key={w._id}
-              className="bg-[#1f1f1f] border border-gray-800 p-5 rounded-xl flex flex-col sm:flex-row justify-between gap-4"
+              className={`bg-[#1f1f1f] border border-gray-800 p-5 rounded-xl flex flex-col sm:flex-row justify-between gap-4
+                ${w.userId.isBanned && "bg-[url('/images/assets/banned.png')] bg-cover bg-center"} `}
             >
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
@@ -121,9 +122,17 @@ export default function WithdrawListPage() {
                     Pending
                   </span>
                 </div>
-                <p>
-                  <span className="text-gray-400">User:</span> {w.userId.name}
-                </p>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">UserName:</span>
+                  <span>{w.userId.name}</span>
+                  <button
+                    onClick={() => handleCopy(w.userId.name, w._id)}
+                    className="text-xs px-2 py-1 bg-gray-700 rounded "
+                  >
+                    {copiedId === w._id ? "Copied" : "Copy"}
+                  </button>
+                </div>
 
                 <p>
                   <span className="text-gray-400">Amount:</span> {w.amount}

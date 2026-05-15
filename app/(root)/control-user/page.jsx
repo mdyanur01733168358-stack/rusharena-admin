@@ -215,7 +215,7 @@ export default function AdminUserControl() {
         </div>
       )}
       {/* USERS */}
-      <div className="flex flex-col lg:grid lg:grid-cols-4 justify-centre gap-6">
+      <div className="flex flex-col lg:grid lg:grid-cols-2 justify-centre gap-6">
         {users.map((user) => (
           <UserCard
             key={user._id}

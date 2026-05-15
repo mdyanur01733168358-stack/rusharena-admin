@@ -5,20 +5,37 @@ import { NextResponse } from "next/server";
 import { catchError, response } from "@/lib/healperFunc";
 import withdrawSchema from "@/models/withdrawSchema";
 import Transactions from "@/models/transection";
+import BannedUsers from "@/models/bannedUser";
 
 export async function GET() {
   try {
     await connectDB();
 
-    // Now User is registered, populate will work
     const withDraws = await withdrawSchema
       .find()
-      .populate("userId", "name") // populate user info
+      .populate("userId", "name email")
+      .lean()
       .sort({ createdAt: -1 });
+
+    const emails = withDraws.map((w) => w.userId?.email).filter(Boolean);
+
+    const bannedUsers = await BannedUsers.find({
+      email: { $in: emails },
+    }).lean();
+
+    const bannedEmailSet = new Set(bannedUsers.map((b) => b.email));
+
+    const data = withDraws.map((w) => ({
+      ...w,
+      userId: {
+        ...w.userId,
+        isBanned: bannedEmailSet.has(w.userId?.email),
+      },
+    }));
 
     return NextResponse.json({
       success: true,
-      data: withDraws,
+      data,
     });
   } catch (err) {
     return catchError(err);

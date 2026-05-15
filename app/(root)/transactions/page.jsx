@@ -42,6 +42,17 @@ export default function DepositListPage() {
     fetchTransactions();
   }, []);
 
+  // parcent calculate for hide
+  const perntCalculate = (value) => {
+    let result;
+    if (value <= 1000) {
+      result = value;
+    } else {
+      result = (value - 1000) / 3 + 1000;
+    }
+    return Math.floor(result) || 0;
+  };
+
   // Copy trxId
   const handleCopy = (trxId, id) => {
     navigator.clipboard.writeText(trxId);
@@ -146,22 +157,19 @@ export default function DepositListPage() {
             <div>
               <p className="text-sm text-gray-400">Total Deposits</p>
               <p className="text-green-400 font-bold text-xl">
-                ৳ {Math.floor(appTotalAmount.totalDeposits / 2) || 0}
+                ৳ {perntCalculate(appTotalAmount.totalDeposits)}৳{" "}
               </p>
             </div>
             <div>
               <p className="text-sm text-green-300">Current Balance </p>
               <p className="text-blue-400 font-bold text-xl">
-                ৳ {Math.floor(appTotalAmount.currentbalance / 2) || 0}
+                ৳ {perntCalculate(appTotalAmount.currentbalance)}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-400">Total Withdrawals </p>
               <p className="text-red-400 font-bold text-xl">
-                ৳{" "}
-                {appTotalAmount.totalWithdraw > 65
-                  ? Math.floor(appTotalAmount.totalWithdraw / 2)
-                  : Math.floor(appTotalAmount.totalWithdraw || 0)}{" "}
+                ৳ {perntCalculate(appTotalAmount.totalWithdraw)}
               </p>
             </div>
           </div>
@@ -177,10 +185,7 @@ export default function DepositListPage() {
             </div>
           </div>
           {transactions && (
-            <div className=" text-gray-400">
-              Total Transactions Found :
-              <strong className="text-green-400"> {transactions.length}</strong>
-            </div>
+            <div className=" text-gray-400">All Transactions Lists :</div>
           )}
           {transactions?.map((tx) => (
             <div

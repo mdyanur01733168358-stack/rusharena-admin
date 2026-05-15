@@ -11,7 +11,7 @@ function UserCard({
   setUnbanUserId,
 }) {
   return (
-    <div className="w-full bg-gradient-to-br from-[#1c1c1c] to-[#111] border border-gray-800 rounded-xl p-5 shadow-lg hover:border-blue-500 transition">
+    <div className=" bg-gradient-to-br from-[#1c1c1c] to-[#111] border border-gray-800 rounded-xl p-5 shadow-lg hover:border-blue-500 transition">
       {/* Header */}
       <div className=" flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold text-white">{user.name}</h2>

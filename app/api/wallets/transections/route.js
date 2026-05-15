@@ -1,44 +1,145 @@
+import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
+import { catchError } from "@/lib/healperFunc";
 import Transactions from "@/models/transection";
+import User from "@/models/user";
 
-export async function GET(request) {
+export async function GET(req) {
   try {
     await connectDB();
 
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
+    const { searchParams } = new URL(req.url);
+    const filterTime = searchParams.get("time");
 
-    if (!userId) {
-      return new Response(
-        JSON.stringify({ success: false, message: "User ID is required" }),
-        { status: 400 }
-      );
+    // ✅ start of today
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    // ✅ last 2 days
+    const startOftwoDay = new Date();
+    startOftwoDay.setDate(startOftwoDay.getDate() - 1);
+    startOftwoDay.setHours(0, 0, 0, 0);
+
+    // ✅ start of week
+    const startOfWeek = new Date();
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    // ✅ start of month
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    let timeLimit;
+
+    switch (filterTime) {
+      case "today":
+        timeLimit = startOfToday;
+        break;
+
+      case "twoDay":
+        timeLimit = startOftwoDay;
+        break;
+
+      case "week":
+        timeLimit = startOfWeek;
+        break;
+
+      case "month":
+        timeLimit = startOfMonth;
+        break;
+
+      case "all":
+      default:
+        timeLimit = new Date(0); // all time
+        break;
     }
 
-    const transactions = await Transactions.find({ userId }).sort({
-      createdAt: -1,
+    // // ✅ aggregation with user join
+    const transactions = await Transactions.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: timeLimit },
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      {
+        $unwind: {
+          path: "$user",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $addFields: {
+          userName: "$user.name",
+        },
+      },
+      {
+        $project: {
+          user: 0, // remove full user object
+        },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+    ]);
+
+    const totalDiposits = Number(
+      transactions
+        .reduce((total, tx) => {
+          if (tx.type === "deposit") {
+            return total + Number(tx.amount || 0);
+          }
+          return total;
+        }, 0)
+        .toFixed(2),
+    );
+
+    const totalWithdraws = Number(
+      transactions
+        .reduce((total, tx) => {
+          if (tx.type === "withdraw") {
+            return total + Number(tx.amount || 0);
+          }
+          return total;
+        }, 0)
+        .toFixed(2),
+    );
+
+    const users = await User.find({}).lean();
+
+    let currentbalance = 0;
+
+    if (!users.length) {
+      currentbalance = "Unknown";
+    } else {
+      currentbalance = users
+        .reduce((total, tx) => {
+          return total + Number(tx.dipositbalance || 0);
+        }, 0)
+        .toFixed(2);
+
+      currentbalance = Number(currentbalance);
+    }
+    const appTotalAmount = {
+      totalDeposits: totalDiposits || 0,
+      currentbalance: currentbalance || 0,
+      totalWithdraw: totalWithdraws || 0,
+    };
+
+    return NextResponse.json({
+      success: true,
+      data: transactions,
+      appTotalAmount,
     });
-
-    if (!transactions.length) {
-      return new Response(
-        JSON.stringify({ success: false, message: "No transactions found" }),
-        { status: 404 }
-      );
-    }
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        count: transactions.length,
-        transactions,
-      }),
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error("Error fetching transactions:", error);
-    return new Response(
-      JSON.stringify({ success: false, message: "Server error" }),
-      { status: 500 }
-    );
+  } catch (err) {
+    return catchError(err);
   }
 }

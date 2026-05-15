@@ -3,6 +3,7 @@
 import { connectDB } from "@/lib/connectDB";
 import User from "@/models/user";
 import { response } from "@/lib/healperFunc";
+import BalanceRecord from "@/models/balanceRacord";
 
 export async function GET(req) {
   try {
@@ -43,19 +44,35 @@ export async function PUT(req) {
       );
     }
 
+    // 1. Get user first (needed for name + old values)
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return response(false, 404, "User not found");
+    }
+
+    // 2. Create balance history record BEFORE update
+    const balanceRecord = await BalanceRecord.create({
+      userId: user._id,
+      name: user.name,
+      deposit: dipositbalance - user.dipositbalance,
+      winning: winbalance - user.winbalance,
+    });
+
+    if (!balanceRecord) {
+      return response(false, 404, "balance not Updated !");
+    }
+
+    // 3. Update user balances
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { winbalance, dipositbalance },
       { new: true },
     ).lean();
 
-    if (!updatedUser) {
-      return response(false, 404, "User not found");
-    }
-
-    return response(true, 200, "User balances updated", updatedUser);
-  } catch (err) {
-    console.error(err);
-    return response(false, 500, "Server error", err.message);
+    return response(true, 200, "Balance updated successfully", updatedUser);
+  } catch (error) {
+    console.error(error);
+    return response(false, 500, "Internal server error");
   }
 }

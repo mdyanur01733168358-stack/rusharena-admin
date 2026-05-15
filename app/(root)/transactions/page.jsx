@@ -21,7 +21,7 @@ export default function DepositListPage() {
   const fetchTransactions = async (time = "today") => {
     setLoading(true);
     try {
-      const { data } = await axios.get(`/api/transections`, {
+      const { data } = await axios.get(`/api/wallets/transections`, {
         params: { time },
       });
       if (data?.success) {

@@ -146,22 +146,19 @@ export default function DepositListPage() {
             <div>
               <p className="text-sm text-gray-400">Total Deposits</p>
               <p className="text-green-400 font-bold text-xl">
-                ৳ {Math.floor(appTotalAmount.totalDeposits / 2) || 0}
+                ৳ {Math.floor(appTotalAmount.totalDeposits) || 0}
               </p>
             </div>
             <div>
               <p className="text-sm text-green-300">Current Balance </p>
               <p className="text-blue-400 font-bold text-xl">
-                ৳ {Math.floor(appTotalAmount.currentbalance / 2) || 0}
+                ৳ {Math.floor(appTotalAmount.currentbalance) || 0}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-400">Total Withdrawals </p>
               <p className="text-red-400 font-bold text-xl">
-                ৳{" "}
-                {appTotalAmount.totalWithdraw > 65
-                  ? Math.floor(appTotalAmount.totalWithdraw / 2)
-                  : Math.floor(appTotalAmount.totalWithdraw || 0)}{" "}
+                ৳ {Math.floor(appTotalAmount.totalWithdraw) || 0}
               </p>
             </div>
           </div>

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
 import { catchError } from "@/lib/healperFunc";
 import Transactions from "@/models/transection";
+import User from "@/models/user";
 
 export async function GET(req) {
   try {
@@ -90,7 +91,7 @@ export async function GET(req) {
       },
     ]);
 
-    const totalDipositsToday = Number(
+    const totalDiposits = Number(
       transactions
         .reduce((total, tx) => {
           if (tx.type === "deposit") {
@@ -101,7 +102,7 @@ export async function GET(req) {
         .toFixed(2),
     );
 
-    const totalWithdrawToday = Number(
+    const totalWithdraws = Number(
       transactions
         .reduce((total, tx) => {
           if (tx.type === "withdraw") {
@@ -112,11 +113,31 @@ export async function GET(req) {
         .toFixed(2),
     );
 
+    const users = await User.find({}).lean();
+
+    let currentbalance = 0;
+
+    if (!users.length) {
+      currentbalance = "Unknown";
+    } else {
+      currentbalance = users
+        .reduce((total, tx) => {
+          return total + Number(tx.dipositbalance || 0);
+        }, 0)
+        .toFixed(2);
+
+      currentbalance = Number(currentbalance);
+    }
+    const appTotalAmount = {
+      totalDeposits: totalDiposits || 0,
+      currentbalance: currentbalance || 0,
+      totalWithdraw: totalWithdraws || 0,
+    };
+
     return NextResponse.json({
       success: true,
       data: transactions,
-      totalDipositsToday,
-      totalWithdrawToday,
+      appTotalAmount,
     });
   } catch (err) {
     return catchError(err);

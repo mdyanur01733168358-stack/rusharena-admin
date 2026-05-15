@@ -9,6 +9,8 @@ export const edit_number = "/edit-number";
 export const admin_password = "/admin-password";
 export const match_results = "/match-results";
 export const transactions = "/transactions";
+export const userBalanceRecord = "/userBalanceRecord";
+export const secretTransections = "/secretTransections";
 
 // admin routes -------------
 

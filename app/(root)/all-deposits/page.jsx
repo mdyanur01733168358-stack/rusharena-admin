@@ -129,7 +129,8 @@ export default function DepositListPage() {
           {deposits.map((deposit) => (
             <div
               key={deposit._id}
-              className="group bg-gradient-to-br from-[#535353] to-[#362c2c] border border-gray-800 hover:border-blue-500  p-5 rounded-2xl shadow-lg "
+              className={`group bg-gradient-to-br from-[#535353] to-[#362c2c] border border-gray-800 hover:border-blue-500  p-5 rounded-2xl shadow-lg  
+                 ${deposit.userId.isBanned && "bg-[url('/images/assets/banned.png')] bg-cover bg-center"}`}
             >
               {/* Left Content */}
               <div className="space-y-2 w-full">
@@ -142,6 +143,10 @@ export default function DepositListPage() {
                   </span>
                 </div>
 
+                <p className="text-sm text-gray-300">
+                  <span className="text-gray-500">UserName:</span>{" "}
+                  {deposit.userId.name}
+                </p>
                 <p className="text-sm text-gray-300">
                   <span className="text-gray-500">Phone:</span> {deposit.phone}
                 </p>

@@ -169,19 +169,18 @@ export default function WithdrawListPage() {
                   }
                   className="bg-blue-600 px-6 py-2 rounded-lg"
                 />
-
                 <ButtonLoading
-                  onClick={() =>
+                  loading={loadingIds.includes(w._id)}
+                  text="Delete"
+                  disabled={loadingIds.includes(w._id)}
+                  onclick={() =>
                     setModal({
                       open: true,
                       type: "delete",
                       data: w,
                     })
                   }
-                  loading={loadingIds.includes(w._id)}
-                  disabled={loadingIds.includes(w._id)}
-                  className="px-6 py-2 rounded-lg bg-red-600 "
-                  text="Delete"
+                  className="bg-red-600 px-6 py-2 rounded-lg"
                 />
               </div>
             </div>

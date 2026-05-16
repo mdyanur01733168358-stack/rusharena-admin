@@ -28,8 +28,14 @@ const TransactionSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    trxId: {
+      type: String,
+
+      trim: true,
+      default: "",
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.models.Transactions ||

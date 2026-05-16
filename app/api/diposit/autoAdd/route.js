@@ -168,7 +168,7 @@ export async function POST(req) {
       type: "deposit",
       method,
       phone: data.senderNumber,
-      id: data.trxId,
+      trxId: data.trxId,
       amount: data.amount,
       createdAt: new Date(),
     });

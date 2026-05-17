@@ -145,12 +145,42 @@ export async function DELETE(req) {
 
     await User.findByIdAndUpdate(
       player.authId,
-      {
-        $inc: {
-          dipositbalance: entryFee,
-          winbalance: -(player.winning || 0),
+      [
+        {
+          $set: {
+            winbalance: {
+              $max: [0, { $subtract: ["$winbalance", player.winning || 0] }],
+            },
+
+            dipositbalance: {
+              $let: {
+                vars: {
+                  remainingFromWin: {
+                    $subtract: [player.winning || 0, "$winbalance"],
+                  },
+                },
+                in: {
+                  $cond: [
+                    // if winbalance is enough → no deposit deduction
+                    { $gte: ["$winbalance", player.winning || 0] },
+                    "$dipositbalance",
+
+                    // else deduct remaining from deposit
+                    {
+                      $max: [
+                        0,
+                        {
+                          $subtract: ["$dipositbalance", "$$remainingFromWin"],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+          },
         },
-      },
+      ],
       { new: true },
     );
 
@@ -172,7 +202,16 @@ export async function DELETE(req) {
       userId: player.authId,
       matchId: existingMatch.myMatchId,
     });
-
+    if (
+      foundUser.winbalance + foundUser.dipositbalance <
+      player.winning - winbalance
+    ) {
+      return response(
+        true,
+        200,
+        `Player Balance was only ${foundUser.winbalance + foundUser.dipositbalance} `,
+      );
+    }
     return response(true, 200, "Player removed successfully");
   } catch (error) {
     console.error("DELETE /api/resultMatch/removePlayer error:", error);

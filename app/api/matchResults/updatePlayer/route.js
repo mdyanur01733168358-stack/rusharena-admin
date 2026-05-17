@@ -145,42 +145,12 @@ export async function DELETE(req) {
 
     await User.findByIdAndUpdate(
       player.authId,
-      [
-        {
-          $set: {
-            winbalance: {
-              $max: [0, { $subtract: ["$winbalance", player.winning || 0] }],
-            },
-
-            dipositbalance: {
-              $let: {
-                vars: {
-                  remainingFromWin: {
-                    $subtract: [player.winning || 0, "$winbalance"],
-                  },
-                },
-                in: {
-                  $cond: [
-                    // if winbalance is enough → no deposit deduction
-                    { $gte: ["$winbalance", player.winning || 0] },
-                    "$dipositbalance",
-
-                    // else deduct remaining from deposit
-                    {
-                      $max: [
-                        0,
-                        {
-                          $subtract: ["$dipositbalance", "$$remainingFromWin"],
-                        },
-                      ],
-                    },
-                  ],
-                },
-              },
-            },
-          },
+      {
+        $inc: {
+          dipositbalance: entryFee,
+          winbalance: -(player.winning || 0),
         },
-      ],
+      },
       { new: true },
     );
 

@@ -1,40 +1,72 @@
 import { NextResponse } from "next/server";
+
 import { connectDB } from "@/lib/connectDB";
 import Diposits from "@/models/dipositScema";
-import { catchError } from "@/lib/healperFunc";
 import BannedUsers from "@/models/bannedUser";
+
+import { catchError } from "@/lib/healperFunc";
+
 export async function GET() {
   try {
-    // Connect to MongoDB
+    // ================= CONNECT DB =================
+
     await connectDB();
 
-    // Fetch all deposits (no populate)
-    const deposits = await Diposits.find()
-      .populate("userId", "name email")
-      .lean()
-      .sort({ createdAt: -1 });
+    // ================= FETCH DEPOSITS =================
 
-    const emails = deposits.map((w) => w.userId?.email).filter(Boolean);
+    const deposits = await Diposits.find()
+      .populate({
+        path: "userId",
+        select: "name email",
+      })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // ================= GET EMAILS =================
+
+    const emails = [
+      ...new Set(deposits.map((d) => d.userId?.email).filter(Boolean)),
+    ];
+
+    // ================= FETCH BANNED USERS =================
 
     const bannedUsers = await BannedUsers.find({
       email: { $in: emails },
-    }).lean();
+    })
+      .select("email")
+      .lean();
+
+    // ================= CREATE SET =================
 
     const bannedEmailSet = new Set(bannedUsers.map((b) => b.email));
 
-    const data = deposits.map((w) => ({
-      ...w,
-      userId: {
-        ...w.userId,
-        isBanned: bannedEmailSet.has(w.userId?.email),
-      },
+    // ================= FINAL DATA =================
+
+    const formattedDeposits = deposits.map((deposit) => ({
+      ...deposit,
+
+      userId: deposit.userId
+        ? {
+            ...deposit.userId,
+
+            isBanned: bannedEmailSet.has(deposit.userId.email),
+          }
+        : null,
     }));
 
-    return NextResponse.json({
-      success: true,
-      data: deposits,
-    });
-  } catch (err) {
-    return catchError(err);
+    // ================= RESPONSE =================
+
+    return NextResponse.json(
+      {
+        success: true,
+        count: formattedDeposits.length,
+        data: formattedDeposits,
+      },
+      { status: 200 },
+    );
+  } catch (error) {
+    console.error("GET Deposits Error:", error);
+
+    return catchError(error);
   }
 }

@@ -66,7 +66,11 @@ export async function POST(req) {
     }
 
     // Delete record
-    await Diposits.findByIdAndDelete(deleteId);
+    if (type === "deposit") {
+      await Diposits.findByIdAndDelete(deleteId);
+    } else if (type === "withdraw") {
+      await withdrawSchema.findByIdAndDelete(deleteId);
+    }
 
     return NextResponse.json({
       success: true,

@@ -91,7 +91,7 @@ export default function MatchDetails() {
       });
 
       if (res?.data?.success) {
-        showToast("success", "Results saved successfully!");
+        showToast("success", "Results successfully!");
         // setPlayers(res?.data?.updatedPlayers || players);
       } else {
         showToast("error", res?.data?.message || "Failed to save results");

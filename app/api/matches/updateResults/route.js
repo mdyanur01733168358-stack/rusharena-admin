@@ -72,8 +72,6 @@ export async function POST(req) {
         continue;
       }
 
-      console.log(finalResults);
-
       const user = await User.findById(playerId).session(session);
 
       if (!user) {
@@ -93,6 +91,7 @@ export async function POST(req) {
       await MyMathes.create(
         [
           {
+            name: joinedPlayer.name,
             userId: user._id,
             matchId: match._id,
             title: match.title,

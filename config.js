@@ -1,6 +1,6 @@
 export const MatchType1 = "BR Match";
 export const MatchType2 = "Survival Match";
-export const MatchType3 = "BR Squad 2V2/4V4";
+export const MatchType3 = "BR Squad";
 export const MatchType4 = "Clash Squad";
 export const MatchType5 = "Clash Squad 1V1/2V2";
 export const MatchType6 = "CS Rank only Headshot";

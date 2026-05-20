@@ -32,8 +32,13 @@ const MyMatheschema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.models.MyMathes ||

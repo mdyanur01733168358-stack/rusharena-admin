@@ -87,6 +87,8 @@ export async function POST(req) {
         [
           {
             userId: user._id,
+            matchId: match._id,
+            name: playerName,
             title: match.title,
             time: match.startTime,
             myKills: kills.toString(),
@@ -98,13 +100,14 @@ export async function POST(req) {
 
       // ✅ Collect results
       finalResults.push({
-        name: joinedPlayer.name,
+        name: playerName,
         authId: joinedPlayer.authId,
         userName: joinedPlayer.userName,
         kills,
         winning,
       });
     }
+
     // ✅ Sort players by winning (highest first)
     await finalResults.sort((a, b) => b.winning - a.winning);
 

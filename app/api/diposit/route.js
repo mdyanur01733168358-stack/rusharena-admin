@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { connectDB } from "@/lib/connectDB";
-import Diposits from "@/models/dipositScema";
+import Deposits from "@/models/dipositScema";
 import BannedUsers from "@/models/bannedUser";
-
-import { catchError } from "@/lib/healperFunc";
 
 export async function GET() {
   try {
@@ -14,19 +12,29 @@ export async function GET() {
 
     // ================= FETCH DEPOSITS =================
 
-    const deposits = await Diposits.find()
-      .populate({
-        path: "userId",
-        select: "name email",
-      })
+    const deposits = await Deposits.find()
+      .populate("userId", "name email")
       .sort({ createdAt: -1 })
       .lean();
 
-    // ================= GET EMAILS =================
+    // ================= HANDLE EMPTY =================
 
-    const emails = [
-      ...new Set(deposits.map((d) => d.userId?.email).filter(Boolean)),
-    ];
+    if (!deposits?.length) {
+      return NextResponse.json(
+        {
+          success: true,
+          count: 0,
+          data: [],
+        },
+        { status: 200 },
+      );
+    }
+
+    // ================= GET UNIQUE EMAILS =================
+
+    const emails = deposits
+      .map((deposit) => deposit?.userId?.email)
+      .filter(Boolean);
 
     // ================= FETCH BANNED USERS =================
 
@@ -38,35 +46,44 @@ export async function GET() {
 
     // ================= CREATE SET =================
 
-    const bannedEmailSet = new Set(bannedUsers.map((b) => b.email));
+    const bannedEmailSet = new Set(bannedUsers.map((user) => user.email));
 
-    // ================= FINAL DATA =================
+    // ================= FORMAT RESPONSE =================
 
-    const formattedDeposits = deposits.map((deposit) => ({
-      ...deposit,
+    const data = deposits.map((deposit) => {
+      const user = deposit.userId;
 
-      userId: deposit.userId
-        ? {
-            ...deposit.userId,
+      return {
+        ...deposit,
 
-            isBanned: bannedEmailSet.has(deposit.userId.email),
-          }
-        : null,
-    }));
+        userId: user
+          ? {
+              ...user,
+              isBanned: bannedEmailSet.has(user.email),
+            }
+          : null,
+      };
+    });
 
     // ================= RESPONSE =================
 
     return NextResponse.json(
       {
         success: true,
-        count: formattedDeposits.length,
-        data: formattedDeposits,
+        count: data.length,
+        data,
       },
       { status: 200 },
     );
   } catch (error) {
-    console.error("GET Deposits Error:", error);
+    console.error("GET /api/deposits error:", error);
 
-    return catchError(error);
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Internal Server Error",
+      },
+      { status: 500 },
+    );
   }
 }

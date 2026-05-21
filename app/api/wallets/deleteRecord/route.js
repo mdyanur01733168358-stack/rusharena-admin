@@ -100,7 +100,6 @@ export async function POST(req) {
     };
 
     let totalSuccess = 0;
-    let totalFailure = 0;
 
     // 4. Send in batches of 500
     for (let i = 0; i < tokens.length; i += MAX_TOKENS_PER_BATCH) {
@@ -112,7 +111,6 @@ export async function POST(req) {
       });
 
       totalSuccess += response.successCount;
-      totalFailure += response.failureCount;
     }
     notifyStatus = `${totalSuccess} Device notification sent`;
 

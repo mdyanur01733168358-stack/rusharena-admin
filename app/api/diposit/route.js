@@ -1,25 +1,22 @@
 import { NextResponse } from "next/server";
-
 import { connectDB } from "@/lib/connectDB";
+import User from "@/models/user";
 import Deposits from "@/models/dipositScema";
 import BannedUsers from "@/models/bannedUser";
 
 export async function GET() {
   try {
     // ================= CONNECT DB =================
-
     await connectDB();
 
     // ================= FETCH DEPOSITS =================
-
     const deposits = await Deposits.find()
       .populate("userId", "name email")
       .sort({ createdAt: -1 })
       .lean();
 
     // ================= HANDLE EMPTY =================
-
-    if (!deposits?.length) {
+    if (!deposits || deposits.length === 0) {
       return NextResponse.json(
         {
           success: true,
@@ -30,14 +27,12 @@ export async function GET() {
       );
     }
 
-    // ================= GET UNIQUE EMAILS =================
-
+    // ================= EXTRACT EMAILS SAFELY =================
     const emails = deposits
-      .map((deposit) => deposit?.userId?.email)
-      .filter(Boolean);
+      .map((d) => d?.userId?.email)
+      .filter((email) => typeof email === "string");
 
     // ================= FETCH BANNED USERS =================
-
     const bannedUsers = await BannedUsers.find({
       email: { $in: emails },
     })
@@ -45,28 +40,24 @@ export async function GET() {
       .lean();
 
     // ================= CREATE SET =================
-
     const bannedEmailSet = new Set(bannedUsers.map((user) => user.email));
 
     // ================= FORMAT RESPONSE =================
-
     const data = deposits.map((deposit) => {
-      const user = deposit.userId;
+      const user = deposit?.userId;
 
       return {
         ...deposit,
-
         userId: user
           ? {
               ...user,
-              isBanned: bannedEmailSet.has(user.email),
+              isBanned: user.email ? bannedEmailSet.has(user.email) : false,
             }
           : null,
       };
     });
 
     // ================= RESPONSE =================
-
     return NextResponse.json(
       {
         success: true,
@@ -81,7 +72,8 @@ export async function GET() {
     return NextResponse.json(
       {
         success: false,
-        message: "Internal Server Error",
+        message: error?.message || "Internal Server Error",
+        stack: error?.stack, // remove in production later
       },
       { status: 500 },
     );

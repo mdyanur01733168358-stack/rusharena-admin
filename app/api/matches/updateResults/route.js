@@ -34,7 +34,7 @@ export async function POST(req) {
 
     // ✅ Prevent duplicate results
     const existingResult = await ResultMatches.findOne({
-      myMatchId: match._id,
+      serialNumber: match.serialNumber,
     }).session(session);
 
     if (existingResult) {
@@ -44,10 +44,7 @@ export async function POST(req) {
     }
 
     // ✅ Validate prize pool
-    const totalWinning = results.reduce(
-      (sum, r) => sum + Number(r.winning || 0),
-      0,
-    );
+    const totalWinning = results.reduce((sum, r) => sum + (r.winning || 0), 0);
 
     if (totalWinning > match.winPrize) {
       await session.abortTransaction();
@@ -61,10 +58,10 @@ export async function POST(req) {
 
     // ✅ Process players
     for (const result of results) {
-      const { playerId, kills = 0, winning = 0 } = result;
+      const { playerId, playerName, kills = 0, winning = 0 } = result;
 
       const joinedPlayer = match.joinedPlayers.find(
-        (p) => p.authId === playerId,
+        (p) => p.authId === playerId && p.name === playerName,
       );
 
       if (!joinedPlayer) {
@@ -79,10 +76,8 @@ export async function POST(req) {
         continue;
       }
 
-      const numericWinning = Number(winning);
-
       // ✅ Update balance
-      user.winbalance = (user.winbalance || 0) + numericWinning;
+      user.winbalance = (user.winbalance || 0) + winning;
       await user.save({ session });
 
       updatedPlayers.push(user._id);
@@ -91,13 +86,11 @@ export async function POST(req) {
       await MyMathes.create(
         [
           {
-            name: joinedPlayer.name,
             userId: user._id,
-            matchId: match._id,
             title: match.title,
             time: match.startTime,
             myKills: kills.toString(),
-            myWin: numericWinning.toString(),
+            myWin: winning.toString(),
           },
         ],
         { session },
@@ -109,14 +102,13 @@ export async function POST(req) {
         authId: joinedPlayer.authId,
         userName: joinedPlayer.userName,
         kills,
-        winning: numericWinning,
+        winning,
       });
     }
-
-    // // ✅ Sort players by winning (highest first)
+    // ✅ Sort players by winning (highest first)
     await finalResults.sort((a, b) => b.winning - a.winning);
 
-    // ✅ Save results
+    // ✅ Create ResultMatches (single doc)
     await ResultMatches.create(
       [
         {
@@ -135,14 +127,13 @@ export async function POST(req) {
       ],
       { session },
     );
+
     //delete match from Matches collection
     await Matches.findByIdAndDelete(matchId);
 
-    // ✅ Mark match completed (NO delete)
-    match.status = "completed";
     await match.save({ session });
 
-    // ✅ Commit transaction
+    // ✅ Commit everything
     await session.commitTransaction();
     session.endSession();
 
@@ -151,6 +142,7 @@ export async function POST(req) {
       notFoundPlayers,
     });
   } catch (error) {
+    // ❌ Rollback everything if ANY error happens
     await session.abortTransaction();
     session.endSession();
 

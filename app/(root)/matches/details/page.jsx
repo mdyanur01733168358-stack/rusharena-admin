@@ -86,6 +86,7 @@ export default function MatchDetails() {
 
       const results = players.map((player) => ({
         playerId: player.authId,
+        playerName: player.name,
         kills: Number(player.kills) || 0,
         winning: Number(player.wining) || 0,
       }));

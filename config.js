@@ -9,36 +9,16 @@ export const MatchType8 = "Lone Wolf only Headshot";
 export const MatchType9 = "Lone Wolf survival";
 export const MatchType10 = "Free match";
 
-export const MatchType1Img =
-  "https://res.cloudinary.com/dnvlk6ubg/image/upload/br-rank_dcrhqs.jpg" ||
-  "/images/matches/br-rank.jpg";
-export const MatchType2Img =
-  "https://res.cloudinary.com/dnvlk6ubg/image/upload/survival-match_k6jqvh.jpg" ||
-  "/images/matches/survival-match.jpg";
-export const MatchType3Img =
-  "https://res.cloudinary.com/dnvlk6ubg/image/upload/squad-br-rank_yfd0qx.jpg" ||
-  "/images/matches/squad-br-rank.jpg";
-export const MatchType4Img =
-  "https://res.cloudinary.com/dnvlk6ubg/image/upload/clush-squad_yazq0j.jpg" ||
-  "/images/matches/clush-squad.jpg";
-export const MatchType5Img =
-  "https://res.cloudinary.com/dnvlk6ubg/image/upload/clush-squad-vs_ebufvj.jpg" ||
-  "/images/matches/clush-squad-vs.jpg";
-export const MatchType6Img =
-  "https://res.cloudinary.com/dnvlk6ubg/image/upload/cs-headshot_njjqdm.jpg" ||
-  "/images/matches/cs-headshot.jpg";
-export const MatchType7Img =
-  "https://res.cloudinary.com/dnvlk6ubg/image/upload/lone-wolf-king_kkpqkp.jpg" ||
-  "/images/matches/lone-wolf-king.jpg";
-export const MatchType8Img =
-  "https://res.cloudinary.com/dnvlk6ubg/image/upload/lone-wolf-headshot_ek9ygl.jpg" ||
-  "/images/matches/lone-wolf-headshot.jpg";
-export const MatchType9Img =
-  "https://res.cloudinary.com/dnvlk6ubg/image/upload/lone-wolf-survival_ouwo7p.jpg" ||
-  "/images/matches/lone-wolf-survival.jpg";
-export const MatchType10Img =
-  "https://res.cloudinary.com/dnvlk6ubg/image/upload/free-match_sr5xfb.jpg" ||
-  "/images/matches/free-match.jpg";
+export const MatchType1Img = "/images/matches/br-rank.jpg";
+export const MatchType2Img = "/images/matches/survival-match.jpg";
+export const MatchType3Img = "/images/matches/squad-br-rank.jpg";
+export const MatchType4Img = "/images/matches/clush-squad.jpg";
+export const MatchType5Img = "/images/matches/clush-squad-vs.jpg";
+export const MatchType6Img = "/images/matches/cs-headshot.jpg";
+export const MatchType7Img = "/images/matches/lone-wolf-king.jpg";
+export const MatchType8Img = "/images/matches/lone-wolf-headshot.jpg";
+export const MatchType9Img = "/images/matches/lone-wolf-survival.jpg";
+export const MatchType10Img = "/images/matches/free-match.jpg";
 
 // clowdinary link ----------------------------
 export const clowdinaryLink =

@@ -126,6 +126,9 @@ export default function DepositListPage() {
         </p>
       ) : (
         <div className="grid gap-4">
+          <div className="w-full text-green-600  text-xl m-4 text-bold">
+            Total Pending deposits : {deposits.length || 0}
+          </div>
           {deposits.map((deposit) => (
             <div
               key={deposit._id}

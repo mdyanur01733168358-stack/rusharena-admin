@@ -112,20 +112,19 @@ export default function FullScreenMobileMenu() {
   return (
     <div className="w-full bg-white dark:bg-gray-900 mt-[-50px] text-gray-800 dark:text-gray-200 overflow-y-auto py-6">
       {/* Header */}
-      <div className="mb-6 bg-gray-800 p-4 rounded flex justify-between items-center">
-        <h1
-          onClick={handleDashboardClick}
-          className="text-2xl font-bold text-yellow-600 underline cursor-pointer"
-        >
-          Dashboard
-        </h1>
-
+      <div className="mb-6 bg-gray-800 p-4 px-6 rounded flex justify-between items-center">
         <ButtonLoading
           className="rounded-full bg-red-600 hover:bg-red-700"
           onclick={handleLogout}
           text="Logout"
           loading={loading}
         />
+        <h1
+          onClick={handleDashboardClick}
+          className="text-2xl font-bold text-yellow-600 underline cursor-pointer"
+        >
+          Dashboard
+        </h1>
       </div>
 
       {/* Menu */}

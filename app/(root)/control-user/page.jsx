@@ -9,6 +9,8 @@ import UserCard from "./user-cards";
 /* ================= MAIN PAGE ================= */
 export default function AdminUserControl() {
   const [users, setUsers] = useState([]);
+  const [totalUsers, setTotalUsers] = useState(0);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [updatingId, setUpdatingId] = useState(null);
@@ -39,7 +41,10 @@ export default function AdminUserControl() {
         return;
       }
       if (res.data.success) {
-        setUsers(res?.data?.data || []);
+        setUsers(res?.data?.data.users || []);
+        setTotalUsers(
+          res?.data?.data.totalUsers || res?.data?.data.users.length || 0,
+        );
       }
     } catch (err) {
       showToast("error", err.message || "Failed to fetch users");
@@ -211,7 +216,7 @@ export default function AdminUserControl() {
       {loading && <p className="text-center">Searching users...</p>}
       {users.length > 1 && (
         <div className="w-full text-green-600  text-xl m-4 text-bold">
-          Total Users : {users.length}
+          Total Users : {totalUsers}
         </div>
       )}
       {/* USERS */}

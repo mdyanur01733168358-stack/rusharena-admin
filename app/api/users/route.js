@@ -4,7 +4,6 @@ import { connectDB } from "@/lib/connectDB";
 import User from "@/models/user";
 import { response } from "@/lib/healperFunc";
 import BalanceRecord from "@/models/balanceRacord";
-
 export async function GET(req) {
   try {
     await connectDB();
@@ -12,21 +11,40 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search");
 
-    // If no search provided
     if (!search) {
       return response(false, 400, "Search query is required");
     }
-    const query = search !== "allUser" ? { name: search } : {};
 
-    const users = await User.find(query).lean();
+    // Get first 100 users + total count
+    if (search === "allUser") {
+      const [users, totalUsers] = await Promise.all([
+        User.find({}).limit(100).lean(),
+        User.countDocuments(),
+      ]);
+
+      return response(true, 200, "Users fetched", {
+        users,
+        totalUsers,
+      });
+    }
+
+    // Search by name
+    const users = await User.find({ name: search }).lean();
+
     if (!users.length) {
       return response(false, 404, "No users found");
     }
 
-    return response(true, 200, "Users fetched", users);
+    return response(true, 200, "Users fetched", {
+      users,
+      totalUsers: users.length,
+    });
   } catch (err) {
     console.error(err);
-    return response(false, 500, "Server error", err.message);
+
+    return response(false, 500, "Server error", {
+      error: err.message,
+    });
   }
 }
 

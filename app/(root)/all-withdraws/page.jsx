@@ -107,10 +107,13 @@ export default function WithdrawListPage() {
         <p className="text-gray-400 text-center">No pending withdraws found.</p>
       ) : (
         <div className="space-y-4">
+          <div className="w-full text-green-600  text-xl m-4 text-bold">
+            Total Pending Withdraw's : {withdraws.length || 0}
+          </div>
           {withdraws.map((w) => (
             <div
               key={w._id}
-              className={`bg-[#1f1f1f] border border-gray-800 p-5 rounded-xl flex flex-col sm:flex-row justify-between gap-4
+              className={`bg-gray-800 border border-gray-400 p-5 rounded-xl flex flex-col sm:flex-row justify-between gap-4
                 ${w.userId.isBanned && "bg-[url('/images/assets/banned.png')] bg-cover bg-center"} `}
             >
               <div className="space-y-1">

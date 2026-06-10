@@ -1,38 +1,18 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
 import Image from "next/image";
 
-import { Preferences } from "@capacitor/preferences";
-
-import { showToast } from "./tostify";
-
+import React, { useState } from "react";
+import { RotateCcw } from "lucide-react";
 export default function Navbar() {
-  const [BalanceAmount, setbalance] = useState(0);
+  const [reloadSpin, setReloadSpin] = useState(false);
 
-  useEffect(() => {
-    async function loadUser() {
-      try {
-        const { value } = await Preferences.get({ key: "access_token" });
-
-        if (!value) {
-          showToast("error", "Please login to continue!");
-          return;
-        }
-
-        const res = await fetch(
-          `/api/getuser?authId=${encodeURIComponent(value)}`,
-        );
-
-        const data = await res.json();
-        setbalance(data.data.dipositbalance + data.data.winbalance);
-      } catch (error) {
-        console.error("Error loading user data:", error);
-      }
-    }
-
-    loadUser();
-  }, []);
+  const handleReload = () => {
+    setReloadSpin(true);
+    setTimeout(() => {
+      window.location.reload();
+    }, 700);
+  };
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 min-h-[38px] bg-[#0A0020] flex justify-between py-3 px-6 shadow-[0_-1px_10px_rgba(0,0,0,0.4)] z-99">
@@ -45,23 +25,20 @@ export default function Navbar() {
             height={52}
             className="rounded-full"
           />
-          <h1 className="text-xl font-black text-yellow-400 uppercase tracking-tighter drop-shadow-[2px_2px_0_#000]">
-            Rush Arena
-          </h1>
+          <h1 className="font-semibold text-lg text-green-500">Rush Arena</h1>
         </div>
 
         {/* Right side: Profile section */}
         <div className="flex items-center ">
-          <Image
-            src="/images/assets/wallet.jpg"
-            alt="wallet"
-            width={56}
-            height={56}
-            className="rounded w-[56px] h-[56px] object-cover"
-          />
-          <span className="font-medium text-white">
-            ৳ {isNaN(Number(BalanceAmount)) ? 0 : Number(BalanceAmount)}
-          </span>
+          <strong className="font-medium text-white"> Admin Panel </strong>
+          <button
+            onClick={handleReload}
+            className="flex items-center gap-2 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition"
+          >
+            <RotateCcw
+              className={`w-5 h-5 ${reloadSpin ? "animate-spin" : ""}`}
+            />
+          </button>
         </div>
       </nav>
     </>

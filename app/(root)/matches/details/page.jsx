@@ -298,20 +298,21 @@ export default function MatchDetails() {
             <div className="flex gap-3">
               <button
                 onClick={() => setRemovePlayer({})}
-                className="w-full bg-gray-700 py-2 rounded"
+                className="w-1/2 bg-gray-700 py-2 rounded"
               >
                 Cancel
               </button>
 
-              <button
-                onClick={async () => {
+              <ButtonLoading
+                className={`w-1/2 py-2 rounded   bg-red-700    `}
+                type="button"
+                text="Delete"
+                loading={loading}
+                onclick={async () => {
                   await removeSinglePlayer(removePlayer.playerId);
                   setRemovePlayer({});
                 }}
-                className={`w-full py-2 rounded   bg-red-700    `}
-              >
-                Delete
-              </button>
+              />
             </div>
           </div>
         </div>

@@ -184,8 +184,10 @@ export async function DELETE(req) {
       // First from winbalance
       // Then remaining from dipositbalance
       // =====================================================
-
+      const entryfee = match.entryFee;
       let remaining = playerWinning;
+      user.winbalance += entryfee / 2;
+      user.dipositbalance += entryfee / 2;
 
       const deductFromWin = Math.min(Number(user.winbalance || 0), remaining);
 

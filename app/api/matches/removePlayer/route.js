@@ -1,29 +1,39 @@
 import { connectDB } from "@/lib/connectDB";
 import matches from "@/models/matches";
+import Refund from "@/models/refund";
 import User from "@/models/user";
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 
 export async function POST(req) {
+  const session = await mongoose.startSession();
+
   try {
     await connectDB();
 
     const body = await req.json();
     const { matchId, playerId } = body;
 
-    if ((!matchId, !playerId)) {
+    // Validate request
+    if (!matchId || !playerId) {
       return NextResponse.json(
         {
           success: false,
-          message: "matchId,  and playerId are required",
+          message: "matchId and playerId are required",
         },
         { status: 400 },
       );
     }
 
+    session.startTransaction();
+
     // Find match
-    const existingMatch = await matches.findById(matchId);
+    const existingMatch = await matches.findById(matchId).session(session);
 
     if (!existingMatch) {
+      await session.abortTransaction();
+      session.endSession();
+
       return NextResponse.json(
         {
           success: false,
@@ -33,12 +43,15 @@ export async function POST(req) {
       );
     }
 
-    // Find player inside joinedPlayers
-    const player = existingMatch.joinedPlayers.find(
-      (p) => p._id?.toString() === playerId,
+    // Find player in joinedPlayers
+    const player = existingMatch.joinedPlayers?.find(
+      (p) => String(p._id) === String(playerId),
     );
 
     if (!player) {
+      await session.abortTransaction();
+      session.endSession();
+
       return NextResponse.json(
         {
           success: false,
@@ -48,10 +61,31 @@ export async function POST(req) {
       );
     }
 
-    // Find user
-    const foundUser = await User.findById(player.authId);
+    const entryFee = existingMatch.entryFee || 0;
 
-    if (!foundUser) {
+    // Split refund
+    const depositRefund = Math.floor(entryFee / 2);
+    const winRefund = entryFee - depositRefund;
+
+    // Update user balance
+    const updatedUser = await User.findByIdAndUpdate(
+      player.authId,
+      {
+        $inc: {
+          dipositbalance: depositRefund,
+          winbalance: winRefund,
+        },
+      },
+      {
+        new: true,
+        session,
+      },
+    );
+
+    if (!updatedUser) {
+      await session.abortTransaction();
+      session.endSession();
+
       return NextResponse.json(
         {
           success: false,
@@ -61,41 +95,53 @@ export async function POST(req) {
       );
     }
 
-    // Refund entry fee
-    const entryFee = existingMatch.entryFee || 0;
-
-    await User.findByIdAndUpdate(
-      player.authId,
-      {
-        $inc: { dipositbalance: entryFee / 2, winbalance: entryFee / 2 }, // Refund half/half of the entry fee to dipositbalance and to winbalance as well
-      },
-      { new: true },
-    );
-
-    // Remove player from joinedPlayers
+    // Remove player from match
     await matches.findByIdAndUpdate(
       matchId,
       {
         $pull: {
           joinedPlayers: {
-            _id: playerId, // Use the player's _id to pull from the array
+            _id: playerId,
           },
         },
       },
-      { new: true },
+      { session },
     );
+
+    // Save refund history
+    await Refund.create(
+      [
+        {
+          userId: updatedUser._id,
+          matchId: existingMatch._id,
+          name: player.name,
+          title: existingMatch.title,
+          time: existingMatch.startTime,
+          refund: entryFee,
+        },
+      ],
+      { session },
+    );
+
+    await session.commitTransaction();
+    session.endSession();
 
     return NextResponse.json({
       success: true,
       message: "Player removed and refund processed successfully",
+      refundedAmount: entryFee,
     });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+
     console.error("POST /api/matches/removePlayer error:", error);
 
     return NextResponse.json(
       {
         success: false,
         message: "Internal server error",
+        error: error.message,
       },
       { status: 500 },
     );

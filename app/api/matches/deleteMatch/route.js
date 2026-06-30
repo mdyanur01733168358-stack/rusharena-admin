@@ -35,7 +35,7 @@ export async function DELETE(req) {
       );
     }
 
-    await session.startTransaction();
+    session.startTransaction();
 
     // Find match
     const existingMatch = await Match.findById(matchId).session(session);
@@ -55,17 +55,20 @@ export async function DELETE(req) {
     const joinedPlayers = existingMatch.joinedPlayers || [];
     const entryFee = existingMatch.entryFee || 0;
 
-    // Get all valid player ids
+    // Get all player IDs (duplicates allowed)
     const playerIds = joinedPlayers
       .filter((player) => player?.authId)
-      .map((player) => player.authId);
+      .map((player) => player.authId.toString());
 
-    // Check if every user exists
+    // Get unique IDs only for validation
+    const uniquePlayerIds = [...new Set(playerIds)];
+
+    // Check all users exist
     const users = await User.find({
-      _id: { $in: playerIds },
+      _id: { $in: uniquePlayerIds },
     }).session(session);
 
-    if (users.length !== playerIds.length) {
+    if (users.length !== uniquePlayerIds.length) {
       await session.abortTransaction();
 
       return NextResponse.json(
@@ -81,52 +84,68 @@ export async function DELETE(req) {
     const depositRefund = Math.floor(entryFee / 2);
     const winRefund = entryFee - depositRefund;
 
-    // Refund all users using bulkWrite
-    if (playerIds.length > 0) {
-      const bulkOperations = playerIds.map((id) => ({
+    // Group refunds by user
+    const refundMap = {};
+
+    for (const id of playerIds) {
+      if (!refundMap[id]) {
+        refundMap[id] = {
+          deposit: 0,
+          win: 0,
+        };
+      }
+
+      refundMap[id].deposit += depositRefund;
+      refundMap[id].win += winRefund;
+    }
+
+    // Update user balances
+    const bulkOperations = Object.entries(refundMap).map(
+      ([userId, refund]) => ({
         updateOne: {
-          filter: { _id: id },
+          filter: { _id: userId },
           update: {
             $inc: {
-              // Verify this field name matches your schema
-              dipositbalance: depositRefund,
-              winbalance: winRefund,
+              dipositbalance: refund.deposit,
+              winbalance: refund.win,
             },
           },
         },
-      }));
+      }),
+    );
 
+    if (bulkOperations.length > 0) {
       await User.bulkWrite(bulkOperations, { session });
     }
 
-    // Create refund history
-    for (const player of joinedPlayers) {
-      if (!player?.authId) continue;
-
-      const refund = new Refund({
+    // Create refund history (one record per joined slot)
+    const refundDocuments = joinedPlayers
+      .filter((player) => player?.authId)
+      .map((player) => ({
         userId: player.authId,
         matchId: existingMatch._id,
         name: player.name,
         title: existingMatch.title,
         time: existingMatch.startTime,
-
         refund: entryFee,
         depositRefund,
         winRefund,
-      });
+      }));
 
-      await refund.save({ session });
+    if (refundDocuments.length > 0) {
+      await Refund.insertMany(refundDocuments, { session });
     }
 
     // Delete match
-    await Match.findByIdAndDelete(matchId, { session });
+    await Match.findByIdAndDelete(matchId).session(session);
 
     await session.commitTransaction();
 
     return NextResponse.json({
       success: true,
       message: "Match deleted and refunds processed successfully.",
-      refundedPlayers: playerIds.length,
+      refundedPlayers: refundDocuments.length,
+      uniqueUsersRefunded: uniquePlayerIds.length,
       refundPerPlayer: entryFee,
     });
   } catch (error) {

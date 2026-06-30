@@ -142,7 +142,6 @@ export async function DELETE(req) {
     await connectDB();
 
     const body = await req.json();
-
     const { matchId, playerId } = body;
 
     // ================= VALIDATION =================
@@ -179,14 +178,15 @@ export async function DELETE(req) {
       }
 
       const playerWinning = Number(player.winning || 0);
+      const entryfee = Number(match.entryFee || 0);
 
       // =====================================================
       // REMOVE WINNING FROM USER
-      // First from winbalance
-      // Then remaining from dipositbalance
       // =====================================================
-      const entryfee = match.entryFee;
+
       let remaining = playerWinning;
+
+      // Return entry fee first
       user.winbalance += entryfee / 2;
       user.dipositbalance += entryfee / 2;
 
@@ -201,7 +201,6 @@ export async function DELETE(req) {
 
       remaining -= deductFromDeposit;
 
-      // Insufficient balance protection
       if (remaining > 0) {
         throw new Error(`User has insufficient balance. Missing ${remaining}`);
       }
@@ -210,6 +209,28 @@ export async function DELETE(req) {
       user.dipositbalance -= deductFromDeposit;
 
       await user.save({ session });
+
+      // ================= SAVE REFUND =================
+
+      await Refund.create(
+        [
+          {
+            userId: user._id,
+            matchId: match._id,
+            name: player.name,
+            title: match.title,
+            time: match.startTime,
+            refund: entryfee,
+          },
+        ],
+        { session },
+      );
+
+      // ================= REMOVE PLAYER =================
+
+      match.joinedPlayers = match.joinedPlayers.filter(
+        (p) => p._id.toString() !== playerId.toString(),
+      );
 
       await match.save({ session });
 
@@ -224,7 +245,7 @@ export async function DELETE(req) {
       );
     });
 
-    return response(true, 200, "Player Updated successfully");
+    return response(true, 200, "Player deleted successfully");
   } catch (error) {
     console.error("DELETE Result Match Error:", error);
 
